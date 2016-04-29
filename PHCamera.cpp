@@ -23,6 +23,43 @@ MAVector3 PHCamera::project(MAVector3 point)
     return result;
 }
 
+// находит трёхмерные координаты для точки на плоскости матрицы
+MAVector3 PHCamera::unproject(MAVector3 point, double distance)
+{
+    MAVector3 result, x0, x1, xc1;
+    double f, m;
+    
+    // фокусное расстояние (миллиметры)
+    f = m_f;
+    // размер пиксела (миллиметры)
+    m = m_mx;
+    
+    // координаты центра кадра (главная точка)
+    x0.x = m_b.x;
+    x0.y = m_b.y;
+    
+    // входные точки на изображении (пикселы)
+    x1.x = point.x;
+    x1.y = point.y;
+    
+    // исправляем дисторсию
+    //x1 = m_camera.undistortedPoint(x1);
+    
+    // входные точки в системе координат камеры (миллиметры)
+    xc1.x = (x1.x - x0.x) * m;
+    xc1.y = -(x1.y - x0.y) * m;
+    xc1.z = -f;
+    
+    MAMatrix Rt = R.transposed();
+    xc1.normalize();
+    xc1 = Rt * xc1;
+    xc1 *= distance;
+    
+    result = xc1 + m_X0;
+    
+    return result;
+}
+
 // читает файл параметров камеры в формате CImgGeom
 bool PHCamera::loadParameters(std::string filename)
 {

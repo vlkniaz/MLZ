@@ -66,6 +66,8 @@ else()
 endif()
 
 add_executable (MLZ MLZ/main.cpp)
+
+find_package (IMLIB REQUIRED)
 target_link_libraries (MLZ LINK_PUBLIC ${IMLIB_LIBRARY})
 include_directories(${IMLIB_INCLUDE_DIR})
 

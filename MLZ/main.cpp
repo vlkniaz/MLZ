@@ -11,7 +11,7 @@ int main()
 {
     // object space coordinate system X - left, Z - forward, Y - up
     // object space refernce points locations
-    MAVector3 objA, objB, imA, imB;
+    MAVector3 objA, objB, imA, imB, objAt;
     MAVector3 gtX0, mlzX0, error;
     std::vector<MAVector3> imagePoints, objectPoints;
     
@@ -23,12 +23,18 @@ int main()
     objB.y = 0.0;
     objB.z = 0.0;
     
+    cout << "objA: " << objA << ", objB: " << objB << endl;
+    
     PHCamera camera;
     camera.loadParameters("_impara01.txt");
     gtX0 = camera.m_X0;
+    camera.setAlpha(0.12);
     imA = camera.project(objA);
     imB = camera.project(objB);
     cout << "imA: " << imA << ", imB: " << imB << endl;
+    MAVector3 dist = objA - gtX0;
+    objAt = camera.unproject(imA, dist.modulus());
+    cout << "objAt: " << objAt << endl;
     
     // estimate external orietnation using MLZ
     PHOrientation orientation;

@@ -310,17 +310,8 @@ double PHOrientation::makeMLZ(double omega, double kappa)
     
     n = xk2.crossProduct(xk1);
     n.normalize();
-    if(n.z >= 0)
-    {
-        n2 = oy.crossProduct(n);
-    }
-    else
-    {
-        n2 = n.crossProduct(oy);
-    }
-    n2.normalize();
     
-    alpha = atan2(-n2.z, n2.x);
+    alpha = atan2(n.x, n.z);
     alphaDeg = alpha * 180.0 / M_PI;
     
     Rkt = MAMatrix::rotationAboutY(alpha);

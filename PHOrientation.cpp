@@ -312,7 +312,12 @@ double PHOrientation::makeMLZ(double omega, double kappa)
     n.normalize();
     
     alpha = atan2(n.x, n.z);
+    if(n.z < 0)
+    {
+        alpha += M_PI;
+    }
     alphaDeg = alpha * 180.0 / M_PI;
+
     
     Rkt = MAMatrix::rotationAboutY(alpha);
     

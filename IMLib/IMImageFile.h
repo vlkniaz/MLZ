@@ -91,6 +91,9 @@ public:
 	
 	// загружает изображение и выделяет под него память
 	bool allocAndLoadImage();
+    
+    // создаёт копию изображения и массива данных
+    IMImageFile* copy();
 	
 	// функции доступа к членам класса
 	std::string fileName() const

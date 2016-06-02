@@ -38,6 +38,7 @@ IMImageFile::IMImageFile()
 
 // копирующий конструктор
 IMImageFile::IMImageFile(const IMImageFile& other):
+m_imageFormat(other.m_imageFormat),
 m_fileFormat(other.m_fileFormat),
 m_image(other.m_image),
 m_lastError(other.m_lastError)
@@ -195,6 +196,18 @@ bool IMImageFile::allocAndLoadImage()
 	
 	allocImage();
 	return m_fileFormat->loadImage();
+}
+
+// создаёт копию изображения и массива данных
+IMImageFile* IMImageFile::copy()
+{
+    // проверяем формат файла
+    IMImageFile *newImage = new IMImageFile(*this);
+    
+    newImage->allocImage();
+    memcpy(newImage->m_image, m_image, m_imageFormat.bytesPerRow*m_imageFormat.pixelsHigh);
+    
+    return newImage;
 }
 
 // -------------------------------------------------------------

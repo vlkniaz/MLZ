@@ -82,7 +82,7 @@ IMImageFile::~IMImageFile()
 	if(m_image != 0)
 	{
         //printf("Free image\n");
-		free(m_image);
+		//free(m_image);
 	}
 	if(m_fileFormat != 0 && m_fileFormat->imageFile() == this)
 	{

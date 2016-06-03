@@ -151,6 +151,6 @@ public:
     }
 };
 
-IMImageFile* convert64biTo32bit(IMImageFile* image);
-void saveFlowTo32bit(IMImageFile *convolvedImage, const char* path, const char* filename);
-void save32BitFlowTo32bit(IMImageFile *convolvedImage, const char* path, const char* filename);
+//IMImageFile* convert64biTo32bit(IMImageFile* image);
+//void saveFlowTo32bit(IMImageFile *convolvedImage, const char* path, const char* filename);
+//void save32BitFlowTo32bit(IMImageFile *convolvedImage, const char* path, const char* filename);

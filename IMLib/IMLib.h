@@ -13,5 +13,7 @@
 #include <IMLib/IMImageFile.h>
 #include <IMLib/IMImageFileFormat.h>
 #include <IMLib/IMBMPImageFileFormat.h>
+#include <IMLib/IMTIFFImageFileFormat.h>
 #include <IMLib/IMImageResizer.h>
 #include <IMLib/MAMatrix.h>
+#include <IMLib/IMMotionAnalyser.h>

@@ -276,7 +276,6 @@ private:
 
 public:
 	// конструктор матрицы произвольного размера
-	
 	MAMatrix(int rowsHigh, int columnsWide)
 	{
 		m_rowsHigh = rowsHigh;
@@ -294,6 +293,11 @@ public:
 		m_matrix = new double[m_rowsHigh * m_columnsWide];
 		memcpy(m_matrix, matrix.m_matrix, sizeof(double) * m_rowsHigh * m_columnsWide);
 	}
+    
+    ~MAMatrix()
+    {
+        delete [] m_matrix;
+    }
 
 	// установка значений элементов матрицы
 	void set(unsigned int row, unsigned int column, double value)

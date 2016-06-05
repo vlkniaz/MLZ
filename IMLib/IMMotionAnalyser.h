@@ -32,9 +32,24 @@ private:
     // последовательность найденых оптических потоков
     vector<IMImageFile*> m_groundTruthFlowSequence;
     
+    // окно Хэмминга
+    IMImageFile *m_hammingWindow;
+    
 public:
+    // конструктор без парамтеров
+    IMMotionAnalyser() :
+    m_hammingWindow(0)
+    {
+        
+    }
+    
     // сдвиг от кадра I0 к кадру I1
-    MAVector3 shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1);
+    IMPoint shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1, double& correlation);
+        
+    // прослеживание объекта на последовательности изображений, начиная с кадра nFrame,
+    // до тех пор пока коэффициент корреляции больше minCorrelation
+    void trackObjectAtFrame(int nFrame, IMPoint point, IMSize searchWindowSize, double minCorrelation);
+
     
     // оценка оптического потока методом Хорна-Шунка
     void estimateHSFlow();

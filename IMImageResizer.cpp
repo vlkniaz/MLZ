@@ -111,8 +111,6 @@ IMImageFile* IMImageResizer::newImageFromRegion(IMRegion region)
 {
 	IMImageFile* newImage = 0;
 
-	cout << "newImageFromRegion" << endl;
-
 	if (m_image == 0)
 		return 0;
 
@@ -152,4 +150,64 @@ IMImageFile* IMImageResizer::newImageFromRegion(IMRegion region)
 	}
 
 	return newImage;
+}
+
+// создаёт новое изображение с заданным числои бит на пиксел из заданной области исходного изображения
+IMImageFile* IMImageResizer::newImageFromRegion(IMRegion region, int bitsPerSample)
+{
+    IMImageFile* newImage;
+    int bytesPerPixel = bitsPerSample * m_image->samplesPerPixel() / 8;
+    int x, y, srcX, srcY;
+    int srcWidth, srcHeight, width, height;
+    
+    srcWidth = m_image->pixelsWide();
+    srcHeight = m_image->pixelsHigh();
+    width = region.size.width;
+    height = region.size.height;
+    
+    // создаём новое изображение
+    newImage = new IMImageFile;
+    newImage->setPixelsWide(static_cast<int>(width));
+    newImage->setPixelsHigh(static_cast<int>(height));
+    newImage->setBitsPerSample(bitsPerSample);
+    newImage->setSamplesPerPixel(m_image->samplesPerPixel());
+    newImage->setBytesPerRow(static_cast<int>(region.size.width * bytesPerPixel));
+    newImage->allocImage();
+    
+    if(bitsPerSample == 64)
+    {
+        unsigned char *srcImage8 = reinterpret_cast<unsigned char*>(m_image->image());
+        double *newImage64 = reinterpret_cast<double*>(newImage->image());
+
+        // копируем заданную область в новое изображение
+        for (y = 0; y < region.size.height; y++)
+        {
+            for(x = 0; x < region.size.width; x++)
+            {
+                srcX = x + region.origin.x;
+                srcY = y + region.origin.y;
+                
+                newImage64[x + y * width] = srcImage8[srcX + srcY * srcWidth];
+            }
+        }
+    }
+    if(bitsPerSample == 32)
+    {
+        unsigned char *srcImage8 = reinterpret_cast<unsigned char*>(m_image->image());
+        float *newImage32 = reinterpret_cast<float*>(newImage->image());
+        
+        // копируем заданную область в новое изображение
+        for (y = 0; y < region.size.height; y++)
+        {
+            for(x = 0; x < region.size.width; x++)
+            {
+                srcX = x + region.origin.x;
+                srcY = y + region.origin.y;
+                
+                newImage32[x + y * width] = srcImage8[srcX + srcY * srcWidth];
+            }
+        }
+    }
+    
+    return newImage;
 }

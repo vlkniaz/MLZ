@@ -27,6 +27,33 @@ protected:
 public:
 	// создаёт новое изображение из заданной области исходного изображения
 	IMImageFile* newImageFromRegion(IMRegion region);
+    
+    // создаёт новое изображение с заданным числои бит на пиксел из заданной области исходного изображения
+    IMImageFile* newImageFromRegion(IMRegion region, int bitsPerSample);
+    
+    // создаёт новое изображение с центром в заданной точке исходного изображения
+    IMImageFile* newImageWithCenterAtPoint(IMPoint point, IMSize size)
+    {
+        IMRegion region;
+        region.size = size;
+        region.origin = point;
+        region.origin.x -= size.width/2;
+        region.origin.y -= size.height/2;
+        
+        return newImageFromRegion(region);
+    }
+    
+    // создаёт новое изображение с центром в заданной точке исходного изображения
+    IMImageFile* newImageWithCenterAtPoint(IMPoint point, IMSize size, int bitsPerSample)
+    {
+        IMRegion region;
+        region.size = size;
+        region.origin = point;
+        region.origin.x -= size.width/2;
+        region.origin.y -= size.height/2;
+        
+        return newImageFromRegion(region, bitsPerSample);
+    }
 
 	void setImage(IMImageFile *image)
 	{

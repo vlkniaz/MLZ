@@ -635,22 +635,17 @@ void FFTFilterFull(unsigned int width, unsigned int alignedWidth, unsigned int h
 }
 
 // сдвиг от кадра I0 к кадру I1
-MAVector3 IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1)
+IMPoint IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1, double& correlation)
 {
-    cout << "shiftFromI0ToI1" << endl;
-    
-    MAVector3 resultShift;
+    IMPoint resultShift;
     
     typedef std::chrono::high_resolution_clock Clock;
     auto t1 = Clock::now();
 
     fftw_complex *baseImageDataFFT, *baseImageDataFFTSrc, *baseImage2DataFFT, *baseImage2DataFFTSrc;
     fftw_plan baseImagePlan, baseImageInversePlan, baseImage2Plan, baseImage2InversePlan;
-    int baseImageSize, baseImageWidth, baseImageHeight, logarithm, x, y, index;
-    double sample, lowGamma, butterworthN, sample2, numerator, denomniator, a, b, c, d, e, f, modulus;
-    unsigned char *image0Data, *image1Data, *image2Data;
-    double *baseImageDataR64;
-    float *timeDiffData;
+    int baseImageSize, baseImageWidth, baseImageHeight, x, y, index;
+    double sample, sample2, a, b, c, d, e, f, modulus;
     float *fftImageData, *newImageData32;
     IMImageFile fftImage, newImage32;
     IMSize cellSize;
@@ -677,13 +672,16 @@ MAVector3 IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1)
     baseImage2InversePlan = fftw_plan_dft_2d(cellSize.height, cellSize.width, baseImage2DataFFT, baseImage2DataFFTSrc, FFTW_BACKWARD, FFTW_ESTIMATE);
 
     // окно Хэмминга
-    IMImageFile *window = window2d(cellSize.width, cellSize.height);
+    if(m_hammingWindow == 0)
+    {
+        m_hammingWindow = window2d(cellSize.width, cellSize.height);
+    }
 
     // вычисляем преобразование Фурье
 
     // приводим изображение к типу double
-    iFFTToFFT(cellSize.width, cellSize.width, cellSize.height, I0->image(), baseImageDataFFTSrc, false, false, window);
-    iFFTToFFT(cellSize.width, cellSize.width, cellSize.height, I1->image(), baseImage2DataFFTSrc, false, false, window);
+    iFFTToFFT(cellSize.width, cellSize.width, cellSize.height, I0->image(), baseImageDataFFTSrc, false, false, m_hammingWindow);
+    iFFTToFFT(cellSize.width, cellSize.width, cellSize.height, I1->image(), baseImage2DataFFTSrc, false, false, m_hammingWindow);
 
     // производим преобразование Фурье
     fftw_execute(baseImagePlan);
@@ -692,16 +690,19 @@ MAVector3 IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1)
     // свёртка в частотной области
     if(true)
     {
-        // создаём изображение - Фурье спектр
-        fftImage.setPixelsWide(baseImageWidth);
-        fftImage.setPixelsHigh(baseImageHeight);
-        fftImage.setSamplesPerPixel(1);
-        fftImage.setBitsPerSample(32);
-        fftImage.setBytesPerRow(baseImageWidth * 1 * sizeof(float));
-        fftImage.setFileFormat(new IMTIFFImageFileFormat);
-        fftImage.allocImage();
+        if(0)
+        {
+            // создаём изображение - Фурье спектр
+            fftImage.setPixelsWide(baseImageWidth);
+            fftImage.setPixelsHigh(baseImageHeight);
+            fftImage.setSamplesPerPixel(1);
+            fftImage.setBitsPerSample(32);
+            fftImage.setBytesPerRow(baseImageWidth * 1 * sizeof(float));
+            fftImage.setFileFormat(new IMTIFFImageFileFormat);
+            fftImage.allocImage();
 
-        fftImageData = (float*)fftImage.image();
+            fftImageData = (float*)fftImage.image();
+        }
 
         // заполняем изображение - Фурье спектр
         for(y = 0; y < baseImageHeight; y++)
@@ -742,37 +743,55 @@ MAVector3 IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1)
                 baseImage2DataFFT[index][1] = f;
 
                 //sample = modulus;
-
-                fftImageData[x + y * baseImageWidth] = sample;
+                if(0)
+                {
+                    fftImageData[x + y * baseImageWidth] = sample;
+                }
             }
         }
-
-        fftImage.save("fft.tif");
+        if(0)
+        {
+            fftImage.save("fft.tif");
+        }
     }
 
     // производим обратное преобразование Фурье
     fftw_execute(baseImageInversePlan);
     fftw_execute(baseImage2InversePlan);
     
-    newImageData32 = reinterpret_cast<float*>(malloc(baseImageSize * sizeof(float)));
-    FFTToF(baseImageWidth, baseImageWidth, baseImageHeight, newImageData32, baseImage2DataFFTSrc, false, 32, false);
-    newImage32.setPixelsWide(baseImageWidth);
-    newImage32.setPixelsHigh(baseImageHeight);
-    newImage32.setSamplesPerPixel(1);
-    newImage32.setBitsPerSample(32);
-    newImage32.setBytesPerRow(baseImageWidth * 1 * sizeof(float));
-    newImage32.setFileFormat(new IMTIFFImageFileFormat);
-    newImage32.setImage(reinterpret_cast<unsigned char*>(newImageData32));
-    newImage32.save("correlation.tiff");
+    if(1)
+    {
+        newImageData32 = reinterpret_cast<float*>(malloc(baseImageSize * sizeof(float)));
+        FFTToF(baseImageWidth, baseImageWidth, baseImageHeight, newImageData32, baseImage2DataFFTSrc, false, 32, false);
+        newImage32.setPixelsWide(baseImageWidth);
+        newImage32.setPixelsHigh(baseImageHeight);
+        newImage32.setSamplesPerPixel(1);
+        newImage32.setBitsPerSample(32);
+        newImage32.setBytesPerRow(baseImageWidth * 1 * sizeof(float));
+        newImage32.setFileFormat(new IMTIFFImageFileFormat);
+        newImage32.setImage(reinterpret_cast<unsigned char*>(newImageData32));
+        newImage32.save("correlation.tiff");
+    }
     
     double max1val, max2val;
     IMPoint secondMax;
 
     IMPoint point = maxLocation(baseImage2DataFFTSrc, baseImageWidth, baseImageHeight, secondMax, max1val, max2val);
     
+    if(point.x > cellSize.width / 2)
+    {
+        point.x -= cellSize.width;
+    }
+    if(point.y > cellSize.height / 2)
+    {
+        point.y -= cellSize.height;
+    }
+    point.x = -point.x;
+    point.y = -point.y;
+    
     auto t2 = Clock::now();
     std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
-    std::cout << time_span.count() << "\n";
+    //std::cout << time_span.count() << "\n";
 
     // освобождаем память
     fftw_destroy_plan(baseImagePlan);
@@ -783,15 +802,71 @@ MAVector3 IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1)
     fftw_free(baseImageDataFFTSrc);
     fftw_free(baseImage2DataFFT);
     fftw_free(baseImage2DataFFTSrc);
-    free(newImageData32);
+    //free(newImageData32);
     fftw_cleanup();
-    window->freeImage();
     fftImage.freeImage();
     
     resultShift.x = point.x;
     resultShift.y = point.y;
     
+    correlation = max1val / baseImageSize;
     return resultShift;
+}
+
+// прослеживание объекта на последовательности изображений, начиная с кадра nFrame,
+// до тех пор пока коэффициент корреляции больше minCorrelation
+void IMMotionAnalyser::trackObjectAtFrame(int nFrame, IMPoint point, IMSize searchWindowSize, double minCorrelation)
+{
+    cout << "trackObjectAtFrame" << endl;
+    
+    // проверяем, что указанный кадр есть в последовательности
+    if(nFrame >= m_imageSeqence.size())
+    {
+        return;
+    }
+    
+    IMImageResizer resizer;
+    IMImageFile *baseImage, *curImage;
+    int curImageN;
+    
+    
+    // создаём эталон
+    m_imageSeqence[nFrame]->allocAndLoadImage();
+    resizer.setImage(m_imageSeqence[nFrame]);
+    baseImage = resizer.newImageWithCenterAtPoint(point, searchWindowSize);
+    baseImage->setFileFormat(new IMTIFFImageFileFormat);
+    baseImage->save("baseImage.tiff");
+    
+    char curImageName[256];
+    char curImageNameNotAligned[256];
+    
+    // цикл по всем изображениям
+    for(curImageN = nFrame+1; curImageN < m_imageSeqence.size(); curImageN++)
+    {
+        sprintf(curImageName, "image%04d.tiff", curImageN);
+        sprintf(curImageNameNotAligned, "image%04d_na.tiff", curImageN);
+        
+        m_imageSeqence[curImageN]->allocAndLoadImage();
+        resizer.setImage(m_imageSeqence[curImageN]);
+        curImage = resizer.newImageWithCenterAtPoint(point, searchWindowSize);
+        curImage->setFileFormat(new IMTIFFImageFileFormat);
+        //curImage->save(curImageNameNotAligned);
+
+        double correlation;
+        IMPoint shift;
+        shift = shiftFromI0ToI1(baseImage, curImage, correlation);
+        
+        cout << curImageN << ": " << shift.x << "," << shift.y <<  " with " << correlation << endl;
+        
+        resizer.setImage(m_imageSeqence[curImageN]);
+        point.x += shift.x;
+        point.y += shift.y;
+        curImage = resizer.newImageWithCenterAtPoint(point, searchWindowSize);
+        curImage->setFileFormat(new IMTIFFImageFileFormat);
+        curImage->save(curImageName);
+        
+        // baseImage = curImage;
+    }
 }
 
 // оценка оптического потока методом Хорна-Шунка
@@ -1438,29 +1513,9 @@ IMPoint maxLocation(fftw_complex *image, int width, int height, IMPoint& secondM
         {
             if(image[x + y*height][0] > max)
             {
-                dx = point.x - x;
-                dy = point.y - y;
-                dist = sqrt(dx*dx + dy*dy);
-                if(dist > 1)
-                {
-                    secondMax = point;
-                    max2 = max;
-                }
                 max = image[x + y*height][0];
                 point.x = x;
                 point.y = y;
-            }
-            else if(image[x + y*height][0] > max2)
-            {
-                dx = point.x - x;
-                dy = point.y - y;
-                dist = sqrt(dx*dx + dy*dy);
-                if(dist > 1)
-                {
-                    max2 = image[x + y*height][0];
-                    secondMax.x = x;
-                    secondMax.y = y;
-                }
             }
         }
     }

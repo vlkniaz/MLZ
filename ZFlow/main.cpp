@@ -2,6 +2,7 @@
 // демонстрация работы алгоритма прослеживания объектов
 
 #include <iostream>
+#include <vector>
 #include <IMLib/IMLib.h>
 
 using namespace std;
@@ -13,19 +14,33 @@ int main()
     IMImageFile *I0, *I1;
     IMMotionAnalyser motionAnalyser;
     
-    I0 = new IMImageFile;
-    I1 = new IMImageFile;
     
-    I0->open("./video2/video0000.tif");
-    I1->open("./video2/video0001.tif");
-    I0->allocAndLoadImage();
-    I1->allocAndLoadImage();
-
-    MAVector3 shift;
-    int j = 0;
-    for(j = 0; j < 1000; j++)
+    I1 = new IMImageFile;
+    char imageName[256];
+    int curImageN = 0;
+    
+    vector<IMImageFile*> imageSequence;
+    
+    for(curImageN = 0; curImageN < 100; curImageN++)
     {
-        shift = motionAnalyser.shiftFromI0ToI1(I0, I1);
+        sprintf(imageName, "./videoBW/ir%04d.tif", curImageN);
+        I0 = new IMImageFile;
+        I0->open(imageName);
+        imageSequence.push_back(I0);
+    }
+    
+    motionAnalyser.setImageSequence(imageSequence);
+
+    IMPoint shift, point;
+    IMSize searchWindowSize;
+    searchWindowSize.width = 64;
+    searchWindowSize.height = 64;
+    point.x = 63;
+    point.y = 220;
+    int j = 0;
+    for(j = 0; j < 1; j++)
+    {
+        motionAnalyser.trackObjectAtFrame(37, point, searchWindowSize, 0.1);
     }
     
     j = 8;

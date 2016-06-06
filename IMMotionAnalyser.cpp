@@ -667,7 +667,6 @@ IMPoint IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1, doubl
 
     // создаём планы прямого и обратного преобразовния Фурье
     baseImagePlan = fftw_plan_dft_2d(cellSize.height, cellSize.width, baseImageDataFFTSrc, baseImageDataFFT, FFTW_FORWARD, FFTW_ESTIMATE);
-    baseImageInversePlan = fftw_plan_dft_2d(cellSize.height, cellSize.width, baseImageDataFFT, baseImageDataFFTSrc, FFTW_BACKWARD, FFTW_ESTIMATE);
     baseImage2Plan = fftw_plan_dft_2d(cellSize.height, cellSize.width, baseImage2DataFFTSrc, baseImage2DataFFT, FFTW_FORWARD, FFTW_ESTIMATE);
     baseImage2InversePlan = fftw_plan_dft_2d(cellSize.height, cellSize.width, baseImage2DataFFT, baseImage2DataFFTSrc, FFTW_BACKWARD, FFTW_ESTIMATE);
 
@@ -756,21 +755,21 @@ IMPoint IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1, doubl
     }
 
     // производим обратное преобразование Фурье
-    fftw_execute(baseImageInversePlan);
     fftw_execute(baseImage2InversePlan);
     
-    if(1)
+    if(0)
     {
-        newImageData32 = reinterpret_cast<float*>(malloc(baseImageSize * sizeof(float)));
-        FFTToF(baseImageWidth, baseImageWidth, baseImageHeight, newImageData32, baseImage2DataFFTSrc, false, 32, false);
         newImage32.setPixelsWide(baseImageWidth);
         newImage32.setPixelsHigh(baseImageHeight);
         newImage32.setSamplesPerPixel(1);
         newImage32.setBitsPerSample(32);
         newImage32.setBytesPerRow(baseImageWidth * 1 * sizeof(float));
         newImage32.setFileFormat(new IMTIFFImageFileFormat);
-        newImage32.setImage(reinterpret_cast<unsigned char*>(newImageData32));
+        newImage32.allocImage();
+        newImageData32 = reinterpret_cast<float*>(newImage32.image());
+        FFTToF(baseImageWidth, baseImageWidth, baseImageHeight, newImageData32, baseImage2DataFFTSrc, false, 32, false);
         newImage32.save("correlation.tiff");
+        newImage32.freeImage();
     }
     
     double max1val, max2val;
@@ -795,7 +794,6 @@ IMPoint IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1, doubl
 
     // освобождаем память
     fftw_destroy_plan(baseImagePlan);
-    fftw_destroy_plan(baseImageInversePlan);
     fftw_destroy_plan(baseImage2Plan);
     fftw_destroy_plan(baseImage2InversePlan);
     fftw_free(baseImageDataFFT);
@@ -817,7 +815,7 @@ IMPoint IMMotionAnalyser::shiftFromI0ToI1(IMImageFile *I0, IMImageFile*I1, doubl
 // до тех пор пока коэффициент корреляции больше minCorrelation
 void IMMotionAnalyser::trackObjectAtFrame(int nFrame, IMPoint point, IMSize searchWindowSize, double minCorrelation)
 {
-    cout << "trackObjectAtFrame" << endl;
+    //cout << "trackObjectAtFrame" << endl;
     
     // проверяем, что указанный кадр есть в последовательности
     if(nFrame >= m_imageSeqence.size())
@@ -826,7 +824,7 @@ void IMMotionAnalyser::trackObjectAtFrame(int nFrame, IMPoint point, IMSize sear
     }
     
     IMImageResizer resizer;
-    IMImageFile *baseImage, *curImage;
+    IMImageFile *baseImage, *curImage, *outputImage;
     int curImageN;
     
     
@@ -834,39 +832,54 @@ void IMMotionAnalyser::trackObjectAtFrame(int nFrame, IMPoint point, IMSize sear
     m_imageSeqence[nFrame]->allocAndLoadImage();
     resizer.setImage(m_imageSeqence[nFrame]);
     baseImage = resizer.newImageWithCenterAtPoint(point, searchWindowSize);
-    baseImage->setFileFormat(new IMTIFFImageFileFormat);
-    baseImage->save("baseImage.tiff");
     
     char curImageName[256];
-    char curImageNameNotAligned[256];
     
     // цикл по всем изображениям
     for(curImageN = nFrame+1; curImageN < m_imageSeqence.size(); curImageN++)
     {
-        sprintf(curImageName, "image%04d.tiff", curImageN);
-        sprintf(curImageNameNotAligned, "image%04d_na.tiff", curImageN);
+        sprintf(curImageName, (m_outputImagePath + "/" + m_outputImageNameFormat).c_str(), curImageN);
         
         m_imageSeqence[curImageN]->allocAndLoadImage();
         resizer.setImage(m_imageSeqence[curImageN]);
         curImage = resizer.newImageWithCenterAtPoint(point, searchWindowSize);
-        curImage->setFileFormat(new IMTIFFImageFileFormat);
-        //curImage->save(curImageNameNotAligned);
 
-        double correlation;
+        double correlation = 1.0;
         IMPoint shift;
+        // вычисляем сдвиг между изображениями
         shift = shiftFromI0ToI1(baseImage, curImage, correlation);
         
-        cout << curImageN << ": " << shift.x << "," << shift.y <<  " with " << correlation << endl;
+        if(correlation < minCorrelation)
+        {
+            m_imageSeqence[curImageN]->freeImage();
+            curImage->freeImage();
+            break;
+        }
+        
+        curImage->freeImage();
         
         resizer.setImage(m_imageSeqence[curImageN]);
+        
+        // перемещаем точку слежения
         point.x += shift.x;
         point.y += shift.y;
-        curImage = resizer.newImageWithCenterAtPoint(point, searchWindowSize);
-        curImage->setFileFormat(new IMTIFFImageFileFormat);
-        curImage->save(curImageName);
         
-        // baseImage = curImage;
+        // сохраняем фрагмент текущего изображения, содержащий прослеживаемый объект
+        outputImage = resizer.newImageWithCenterAtPoint(point, m_outputImageSize);
+        outputImage->setFileFormat(new IMTIFFImageFileFormat);
+        outputImage->save(curImageName);
+        
+        outputImage->freeImage();
+        m_imageSeqence[curImageN]->freeImage();
     }
+    
+    // освобождаем ресурсы
+    m_imageSeqence[nFrame]->freeImage();
+    baseImage->freeImage();
+    
+    m_hammingWindow->freeImage();
+    delete m_hammingWindow;
+    m_hammingWindow = 0;
 }
 
 // оценка оптического потока методом Хорна-Шунка

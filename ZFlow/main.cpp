@@ -1,4 +1,4 @@
-// main.cpp
+    // main.cpp
 // демонстрация работы алгоритма прослеживания объектов
 
 #include <iostream>
@@ -30,6 +30,9 @@ int main()
     }
     
     motionAnalyser.setImageSequence(imageSequence);
+    motionAnalyser.setOutputImageSize(IMSize(64, 64));
+    motionAnalyser.setOutputImageNameFormat("image%04d.tiff");
+    motionAnalyser.setOutputImagePath("./out");
 
     IMPoint shift, point;
     IMSize searchWindowSize;
@@ -40,7 +43,7 @@ int main()
     int j = 0;
     for(j = 0; j < 1; j++)
     {
-        motionAnalyser.trackObjectAtFrame(37, point, searchWindowSize, 0.1);
+        motionAnalyser.trackObjectAtFrame(37, point, searchWindowSize, 0.01);
     }
     
     j = 8;

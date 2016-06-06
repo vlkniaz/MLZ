@@ -150,8 +150,6 @@ bool IMImageFile::loadImage() const
 // выделяет память под изображение
 bool IMImageFile::allocImage()
 {
-    //printf("Alloc image\n");
-    
 	// проверяем настройки изображения
 	if(m_imageFormat.pixelsWide == 0 || m_imageFormat.pixelsHigh == 0 || m_imageFormat.bitsPerSample == 0 || m_imageFormat.samplesPerPixel == 0 || m_imageFormat.bytesPerRow == 0)
 	{
@@ -170,17 +168,14 @@ bool IMImageFile::allocImage()
 // освобождает память изображения
 bool IMImageFile::freeImage()
 {
-    //printf("Free image\n");
-    
-	// проверяем изображение
+    // проверяем изображение
 	if(m_image == 0)
 	{
 		return false;
 	}
 	else
 	{
-		free(m_image);
-		
+		free(m_image);        
 		return true;
 	}
 }

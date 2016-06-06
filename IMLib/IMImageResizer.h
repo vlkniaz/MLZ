@@ -28,6 +28,9 @@ public:
 	// создаёт новое изображение из заданной области исходного изображения
 	IMImageFile* newImageFromRegion(IMRegion region);
     
+    // копирует заданную область исходного изображения
+    void copyToImageFromRegion(IMImageFile *destination, IMRegion region);
+    
     // создаёт новое изображение с заданным числои бит на пиксел из заданной области исходного изображения
     IMImageFile* newImageFromRegion(IMRegion region, int bitsPerSample);
     

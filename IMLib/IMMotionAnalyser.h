@@ -35,10 +35,20 @@ private:
     // окно Хэмминга
     IMImageFile *m_hammingWindow;
     
+    // размер выходного изображения
+    IMSize m_outputImageSize;
+    
+    // папка для сохранения выходных изображений
+    std::string m_outputImagePath;
+    
+    // формат названия выходных изображений
+    std::string m_outputImageNameFormat;
+    
 public:
     // конструктор без парамтеров
     IMMotionAnalyser() :
-    m_hammingWindow(0)
+    m_hammingWindow(0),
+    m_outputImageSize(32, 32)
     {
         
     }
@@ -99,5 +109,20 @@ public:
     void setGroundTruthFlowSequence(vector<IMImageFile*>& groundTruthFlowSequence)
     {
         m_groundTruthFlowSequence = groundTruthFlowSequence;
+    }
+    
+    void setOutputImageSize(IMSize outputImageSize)
+    {
+        m_outputImageSize = outputImageSize;
+    }
+    
+    void setOutputImagePath(std::string outputImagePath)
+    {
+        m_outputImagePath = outputImagePath;
+    }
+    
+    void setOutputImageNameFormat(std::string outputImageNameFormat)
+    {
+        m_outputImageNameFormat = outputImageNameFormat;
     }
 };

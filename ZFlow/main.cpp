@@ -1,6 +1,8 @@
-    // main.cpp
+// main.cpp
 // демонстрация работы алгоритма прослеживания объектов
 
+#include <sstream>
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include <IMLib/IMLib.h>
@@ -14,6 +16,40 @@ int main()
     IMImageFile *I0, *I1;
     IMMotionAnalyser motionAnalyser;
     
+    IMMarkupObject object, newObject;
+    IMImageMarkup markup, newMarkup;
+    IMImageSeqeunceMarkup seqeunceMarkup, newSeqeunceMarkup;
+    object.id = 1;
+    object.objectClass = 1;
+    object.region = IMRegion(14, 16, 100, 100);
+    
+    stringstream stream, stream2;
+    stream << object;
+    //cout << object << endl;
+    
+    IMPoint pnt;
+    stream >> newObject;
+    
+    markup.objects.push_back(object);
+    markup.objects.push_back(newObject);
+    
+    //cout << markup << endl;
+    stream << markup;
+    stream >> newMarkup;
+    
+    seqeunceMarkup.markup.push_back(markup);
+    seqeunceMarkup.markup.push_back(newMarkup);
+    
+    cout << seqeunceMarkup << endl;
+    stream.str("1");
+    stream2 << seqeunceMarkup;
+    std::string str;
+    str = stream.str();
+    stream2 >> newSeqeunceMarkup;
+    
+    ifstream file("test.json");
+    file >> newSeqeunceMarkup;
+    cout << newSeqeunceMarkup << endl;
     
     I1 = new IMImageFile;
     char imageName[256];

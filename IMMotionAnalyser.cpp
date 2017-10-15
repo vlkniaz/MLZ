@@ -19,7 +19,7 @@
 #include <string>
 #include <random>
 
-#import <fftw3.h>					// для быстрого преобразования фурье
+#include <fftw3.h>					// для быстрого преобразования фурье
 
 using namespace std;
 

@@ -16,6 +16,7 @@ endif()
 set(SOURCE 
 	IMTIFFImageFileFormat.cpp
 	IMImageResizer.cpp
+	IMImageConverter.cpp
 	IMImageFileFormat.cpp
 	IMVideoServer.cpp
 	IMVideoClient.cpp
@@ -32,6 +33,7 @@ set(HEADER
 	IMLib/IMLib.h
 	IMLib/IMTIFFImageFileFormat.h
 	IMLib/IMImageResizer.h
+	IMLib/IMImageConverter.h
 	IMLib/IMImageFileFormat.h
 	IMLib/IMVideoServer.h
 	IMLib/IMVideoClient.h
@@ -93,3 +95,13 @@ target_link_libraries (ZFlow LINK_PUBLIC ${IMLIB_LIBRARY} ${LIBS})
 include_directories(${IMLIB_INCLUDE_DIR})
 
 add_dependencies(ZFlow IMLib)
+
+# project Dithering
+
+add_executable (Dithering EXCLUDE_FROM_ALL Dithering/main.cpp)
+
+find_package (IMLIB REQUIRED)
+target_link_libraries (Dithering LINK_PUBLIC ${IMLIB_LIBRARY} ${LIBS})
+include_directories(${IMLIB_INCLUDE_DIR})
+
+add_dependencies(Dithering IMLib)

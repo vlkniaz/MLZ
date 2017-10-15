@@ -68,7 +68,7 @@ bool IMTIFFImageFileFormat::open()
 	if(tiffFile)
 	{
 		uint32 pixelsWide, pixelsHigh;
-		uint16 bitsPerSample, samplesPerPixel, extraSamplesCount, planarConfig, *extraSamples;
+		uint16 bitsPerSample, samplesPerPixel, extraSamplesCount, planarConfig, *extraSamples = 0;
 		
 		TIFFGetField(tiffFile, TIFFTAG_IMAGEWIDTH, &pixelsWide);
 		TIFFGetField(tiffFile, TIFFTAG_IMAGELENGTH, &pixelsHigh);
@@ -90,7 +90,7 @@ bool IMTIFFImageFileFormat::open()
 		{
 			m_imageFile->setIsPlanar(true);
 		}
-		if(extraSamples > 0)
+		if(extraSamplesCount > 0)
 		{
 			m_imageFile->setHasAlpha(true);
 		}

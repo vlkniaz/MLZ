@@ -76,7 +76,7 @@ install(FILES IMLibConfig.cmake DESTINATION lib/IMLib)
 
 add_executable (MLZ EXCLUDE_FROM_ALL MLZ/main.cpp)
 
-#find_package (IMLIB REQUIRED)
+find_package (IMLIB REQUIRED)
 target_link_libraries (MLZ LINK_PUBLIC ${IMLIB_LIBRARY})
 include_directories(${IMLIB_INCLUDE_DIR})
 
@@ -90,7 +90,7 @@ file(COPY _impara01.txt DESTINATION Debug)
 
 add_executable (ZFlow EXCLUDE_FROM_ALL ZFlow/main.cpp)
 
-#find_package (IMLIB REQUIRED)
+find_package (IMLIB REQUIRED)
 target_link_libraries (ZFlow LINK_PUBLIC ${IMLIB_LIBRARY} ${LIBS})
 include_directories(${IMLIB_INCLUDE_DIR})
 
@@ -100,8 +100,8 @@ add_dependencies(ZFlow IMLib)
 
 add_executable (Dithering EXCLUDE_FROM_ALL Dithering/main.cpp)
 
-#find_package (IMLIB REQUIRED)
-target_link_libraries (Dithering LINK_PUBLIC IMLib ${LIBS})
-target_include_directories(Dithering PUBLIC .)
+find_package (IMLIB REQUIRED)
+target_link_libraries (Dithering LINK_PUBLIC ${IMLIB_LIBRARY} ${LIBS})
+include_directories(${IMLIB_INCLUDE_DIR})
 
 add_dependencies(Dithering IMLib)

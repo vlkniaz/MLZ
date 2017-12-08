@@ -26,7 +26,10 @@ set(SOURCE
 	MAMatrix.cpp
 	PHCamera.cpp 
 	PHOrientation.cpp
+	PHQuickHull.cpp
+	PHMesh.cpp
 	IMMotionAnalyser.cpp
+	deps/tiny_obj/tiny_obj_loader.cc
 	)
 
 set(HEADER
@@ -43,7 +46,10 @@ set(HEADER
 	IMLib/MAMatrix.h
 	IMLib/PHCamera.h
 	IMLib/PHOrientation.h
+	IMLib/PHQuickHull.h
+	IMLib/PHMesh.h
 	IMLib/IMMotionAnalyser.h
+	deps/tiny_obj/tiny_obj_loader.h
 	)
 
 # Create a library called "Hello" which includes the source file "hello.cxx".
@@ -105,3 +111,14 @@ target_link_libraries (Dithering LINK_PUBLIC IMLib ${LIBS})
 target_include_directories(Dithering PUBLIC .)
 
 add_dependencies(Dithering IMLib)
+
+# project QuickHull
+
+add_executable (QuickHull EXCLUDE_FROM_ALL Tests/QuickHull/main.cpp)
+
+#find_package (IMLIB REQUIRED)
+target_link_libraries (QuickHull LINK_PUBLIC IMLib ${LIBS})
+target_include_directories(QuickHull PUBLIC .)
+include_directories(deps/tiny_obj/)
+
+add_dependencies(QuickHull IMLib)

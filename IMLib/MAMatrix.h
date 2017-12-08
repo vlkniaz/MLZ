@@ -33,6 +33,14 @@ public:
     {
         
     }
+    
+    MAVector3(double x, double y, double z):
+    x(x),
+    y(y),
+    z(z)
+    {
+        
+    }
 
     MAVector3(MAVector3 const &vec):
     x(vec.x),
@@ -40,6 +48,28 @@ public:
     z(vec.z)
     {
         
+    }
+    
+    double squaredDistanceTo(const MAVector3& other) const
+    {
+        const double dx = x-other.x;
+        const double dy = y-other.y;
+        const double dz = z-other.z;
+        return dx*dx+dy*dy+dz*dz;
+    }
+    
+    static MAVector3 triangleNormal(MAVector3 a, MAVector3 b, MAVector3 c)
+    {
+        double x = a.x - c.x;
+        double y = a.y - c.y;
+        double z = a.z - c.z;
+        double rhsx = b.x - c.x;
+        double rhsy = b.y - c.y;
+        double rhsz = b.z - c.z;
+        double px = y * rhsz - z * rhsy ;
+        double py = z * rhsx - x * rhsz ;
+        double pz = x * rhsy - y * rhsx ;
+        return MAVector3(px,py,pz);
     }
     
     // векторное произведение
@@ -182,6 +212,65 @@ public:
         delta = *this - vec;
         
         return delta.modulus();
+    }
+};
+
+static bool operator!=(const MAVector3& v1, const MAVector3& v2)
+{
+    return v1.x != v2.x && v1.y != v2.y && v1.z != v2.z;
+}
+
+// класс MAPlane
+class MAPlane
+{
+public:
+    MAVector3 m_normal;
+    
+    // расстояние от плоскости до начала координат
+    double m_D;
+    
+    // квадрат
+    double m_sqrNLength;
+    
+    bool isPointOnPositiveSide(const MAVector3& Q) const
+    {
+        double d = m_normal.dotProduct(Q)+m_D;
+        if (d>=0)
+        {
+             return true;
+        }
+        return false;
+    }
+    
+    static double signedDistanceToPlane(const MAVector3& v, const MAPlane& p)
+    {
+        return p.m_normal.dotProduct(v) + p.m_D;
+    }
+    
+    MAPlane() = default;
+    
+    // построение плоскоси по нормали N и точки на плоскости P
+    MAPlane(const MAVector3& N, const MAVector3& P) : m_normal(N), m_D(-N.dotProduct(P)), m_sqrNLength(m_normal.x*m_normal.x+m_normal.y*m_normal.y+m_normal.z*m_normal.z)
+    {
+        
+    }
+};
+
+struct MARay
+{
+    const MAVector3 m_S;
+    const MAVector3 m_V;
+    const double m_VInvLengthSquared;
+    
+    MARay(const MAVector3& S,const MAVector3& V) : m_S(S), m_V(V), m_VInvLengthSquared(1/m_V.modulus())
+    {
+    }
+    
+    static double squaredDistanceBetweenPointAndRay(const MAVector3& p, const MARay& r)
+    {
+        const MAVector3 s = p-r.m_S;
+        double t = s.dotProduct(r.m_V);
+        return s.modulus() - t*t*r.m_VInvLengthSquared;
     }
 };
 

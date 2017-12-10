@@ -30,14 +30,24 @@ int main(int argc, char** argv)
     // читаем файл
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, file.c_str());
     
+    // получаем вершины
     std::vector<MAVector3> vertices;
-    vertices.push_back(MAVector3(0.0, 0.0, 0.0));
-    vertices.push_back(MAVector3(1.0, 0.0, 0.0));
-    vertices.push_back(MAVector3(0.0, 1.0, 0.0));
-    vertices.push_back(MAVector3(0.0, 0.0, 1.0));
+    
+    int verticesCount = attrib.vertices.size() / 3;
+    
+    for(int j = 0; j < verticesCount; j++)
+    {
+        MAVector3 v;
+        v.x = attrib.vertices[3*j + 0];
+        v.y = attrib.vertices[3*j + 1];
+        v.z = attrib.vertices[3*j + 2];
+        
+        vertices.push_back(v);
+    }
     
     PHQuickHull quickHull(vertices);
-    quickHull.buildMesh(0.1);
+    PHConvexHull hull = quickHull.getConvexHull(vertices, true, false);
+    hull.writeWaveformOBJ("hull.obj");
     
     cout << "Hello, world!" << endl;
     

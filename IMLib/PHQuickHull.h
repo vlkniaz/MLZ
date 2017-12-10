@@ -13,6 +13,7 @@
 #include <cmath>
 #include "MAMatrix.h"
 #include "PHMesh.h"
+#include "PHConvexHull.h"
 
 using namespace std;
 
@@ -155,11 +156,13 @@ public:
     }
     
     // построить поверхность
-    void buildMesh(double epsilon);
+    void buildMesh(const std::vector<MAVector3>& pointCloud, bool CCW, bool useOriginalIndices, double epsilon);
     
     // создаёт начальный тетраэдр
     PHMesh createInitialTetrahedron();
     
     // создаёт выпуклую облочку
     void createConvexHalfEdgeMesh();
+    
+    PHConvexHull getConvexHull(const std::vector<MAVector3>& pointCloud, bool CCW, bool useOriginalIndices, double epsilon = 0.0000001);
 };

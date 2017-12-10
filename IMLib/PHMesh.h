@@ -54,8 +54,18 @@ public:
         m_inFaceStack(0),
         m_horizonEdgesOnCurrentIteration(0)
         {
-            
         }
+        
+        /*PHFace(PHFace&& o) noexcept : m_he(o.m_he),
+        m_mostDistantPointDist(o.m_mostDistantPointDist),
+        m_mostDistantPoint(o.m_mostDistantPoint),
+        m_visibilityCheckedOnIteration(o.m_visibilityCheckedOnIteration),
+        m_isVisibleFaceOnCurrentIteration(o.m_isVisibleFaceOnCurrentIteration),
+        m_inFaceStack(o.m_inFaceStack),
+        m_horizonEdgesOnCurrentIteration(o.m_horizonEdgesOnCurrentIteration),
+        m_pointsOnPositiveSide(std::move(o.m_pointsOnPositiveSide))
+        {
+        }*/
         
         void disable() {
             m_he = std::numeric_limits<size_t>::max();
@@ -67,7 +77,7 @@ public:
     };
     
     // Mesh data
-    std::vector< PHFace > m_faces;
+    std::vector< PHMesh::PHFace > m_faces;
     std::vector< PHHalfEdge > m_halfEdges;
     
     // When the mesh is modified and faces and half edges are removed from it, we do not actually remove them from the container vectors.

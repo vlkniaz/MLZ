@@ -96,6 +96,12 @@ public:
         return sqrt(x*x + y*y + z*z);
     }
     
+    // квадрат модуля вектора
+    double modulusSquared() const
+    {
+        return x*x + y*y + z*z;
+    }
+    
     // нормирует данный вектор
     void normalize()
     {
@@ -262,7 +268,7 @@ struct MARay
     const MAVector3 m_V;
     const double m_VInvLengthSquared;
     
-    MARay(const MAVector3& S,const MAVector3& V) : m_S(S), m_V(V), m_VInvLengthSquared(1/m_V.modulus())
+    MARay(const MAVector3& S,const MAVector3& V) : m_S(S), m_V(V), m_VInvLengthSquared(1/m_V.modulusSquared())
     {
     }
     
@@ -270,7 +276,7 @@ struct MARay
     {
         const MAVector3 s = p-r.m_S;
         double t = s.dotProduct(r.m_V);
-        return s.modulus() - t*t*r.m_VInvLengthSquared;
+        return s.modulusSquared() - t*t*r.m_VInvLengthSquared;
     }
 };
 
@@ -753,7 +759,7 @@ public:
     }
     
     // оператор присваивания
-    MAMatrix& operator= (const initializer_list<double> &data)
+    /*MAMatrix& operator= (const initializer_list<double> &data)
     {
         int i, j;
         auto iter = data.begin();
@@ -768,7 +774,7 @@ public:
         }
         
         return *this;
-    }
+    }*/
     
     // минор матрицы
     MAMatrix minor(int i, int j)

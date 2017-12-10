@@ -114,11 +114,22 @@ add_dependencies(Dithering IMLib)
 
 # project QuickHull
 
-add_executable (QuickHull EXCLUDE_FROM_ALL Tests/QuickHull/main.cpp)
+set(QUICKHULL_SOURCE 
+	IMLibTypes.cpp 
+	MAMatrix.cpp
+	PHCamera.cpp 
+	PHOrientation.cpp
+	PHQuickHull.cpp
+	PHConvexHull.cpp
+	PHMesh.cpp
+	deps/tiny_obj/tiny_obj_loader.cc
+	)
+
+add_executable (QuickHull EXCLUDE_FROM_ALL Tests/QuickHull/main.cpp ${QUICKHULL_SOURCE})
 
 #find_package (IMLIB REQUIRED)
-target_link_libraries (QuickHull LINK_PUBLIC IMLib ${LIBS})
+#target_link_libraries (QuickHull LINK_PUBLIC IMLib ${LIBS})
 target_include_directories(QuickHull PUBLIC .)
 include_directories(deps/tiny_obj/)
 
-add_dependencies(QuickHull IMLib)
+#add_dependencies(QuickHull IMLib)

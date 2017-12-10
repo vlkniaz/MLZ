@@ -1,4 +1,5 @@
 #include <IMLib/PHQuickHull.h>
+#include <IMLib/PHConvexHull.h>
 #include <deque>
 
 using namespace std;
@@ -39,7 +40,7 @@ std::array<size_t,6> PHQuickHull::getExtremeValues()
 }
 
 // построить поверхность
-void PHQuickHull::buildMesh(double epsilon)
+void PHQuickHull::buildMesh(const std::vector<MAVector3>& pointCloud, bool CCW, bool useOriginalIndices, double epsilon)
 {
     m_extremeValues = getExtremeValues();
     
@@ -81,7 +82,8 @@ PHMesh PHQuickHull::createInitialTetrahedron()
             std::swap(v[0],v[1]);
         }
         
-        return PHMesh(v[0],v[1],v[2],v[3]);
+        result = PHMesh(v[0],v[1],v[2],v[3]);
+        return result;
     }
     
     // найти две самые дальние точки
@@ -190,7 +192,7 @@ PHMesh PHQuickHull::createInitialTetrahedron()
         }
     }
     
-    return result;
+    return mesh;
 }
 
 // создаёт выпуклую облочку
@@ -219,9 +221,15 @@ void PHQuickHull::createConvexHalfEdgeMesh()
     for (size_t i=0;i < 4;i++)
     {
         auto& f = m_mesh.m_faces[i];
-        if (f.m_pointsOnPositiveSide && f.m_pointsOnPositiveSide->size()>0) {
-            faceList.push_back(i);
-            f.m_inFaceStack = 1;
+        if (f.m_pointsOnPositiveSide != nullptr)
+        {
+            //cout << f.m_pointsOnPositiveSide << endl;
+            cout << f.m_pointsOnPositiveSide->size() << endl;
+            if(f.m_pointsOnPositiveSide->size()>0)
+            {
+                faceList.push_back(i);
+                f.m_inFaceStack = 1;
+            }
         }
     }
     
@@ -425,4 +433,10 @@ void PHQuickHull::createConvexHalfEdgeMesh()
     
     // очищаем временный список вершин
     m_indexVectorPool.clear();
+}
+
+PHConvexHull PHQuickHull::getConvexHull(const std::vector<MAVector3>& pointCloud, bool CCW, bool useOriginalIndices, double epsilon)
+{
+    buildMesh(pointCloud,CCW,useOriginalIndices,epsilon);
+    return PHConvexHull(m_mesh, m_vertices, CCW, useOriginalIndices);
 }

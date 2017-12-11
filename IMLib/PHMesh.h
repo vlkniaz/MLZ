@@ -1,3 +1,13 @@
+//
+//  PHMesh.h
+//  Библиотека PHLib
+//
+//  класс PHMesh для хранения сеточной модели
+//
+//  Created by Vladimir Knyaz on 01.12.17.
+//  Copyright (c) 2017 Vladimir Knyaz. All rights reserved.
+//
+
 #pragma once
 
 #include <vector>
@@ -43,7 +53,8 @@ public:
         size_t m_visibilityCheckedOnIteration;
         std::uint8_t m_isVisibleFaceOnCurrentIteration : 1;
         std::uint8_t m_inFaceStack : 1;
-        std::uint8_t m_horizonEdgesOnCurrentIteration : 3; // Bit for each half edge assigned to this face, each being 0 or 1 depending on whether the edge belongs to horizon edge
+         // 3 бита, определяющие лежит ли ребро на горизонте
+        std::uint8_t m_horizonEdgesOnCurrentIteration : 3;
         std::unique_ptr<std::vector<size_t>> m_pointsOnPositiveSide;
         
         PHFace() : m_he(std::numeric_limits<size_t>::max()),
@@ -56,17 +67,6 @@ public:
         {
         }
         
-        /*PHFace(PHFace&& o) noexcept : m_he(o.m_he),
-        m_mostDistantPointDist(o.m_mostDistantPointDist),
-        m_mostDistantPoint(o.m_mostDistantPoint),
-        m_visibilityCheckedOnIteration(o.m_visibilityCheckedOnIteration),
-        m_isVisibleFaceOnCurrentIteration(o.m_isVisibleFaceOnCurrentIteration),
-        m_inFaceStack(o.m_inFaceStack),
-        m_horizonEdgesOnCurrentIteration(o.m_horizonEdgesOnCurrentIteration),
-        m_pointsOnPositiveSide(std::move(o.m_pointsOnPositiveSide))
-        {
-        }*/
-        
         void disable() {
             m_he = std::numeric_limits<size_t>::max();
         }
@@ -76,13 +76,12 @@ public:
         }
     };
     
-    // Mesh data
+    // грани сеточной модели
     std::vector< PHMesh::PHFace > m_faces;
+    // полурёбра сеточной модели
     std::vector< PHHalfEdge > m_halfEdges;
     
-    // When the mesh is modified and faces and half edges are removed from it, we do not actually remove them from the container vectors.
-    // Insted, they are marked as disabled which means that the indices can be reused when we need to add new faces and half edges to the mesh.
-    // We store the free indices in the following vectors.
+    // списки удалённых граней и полурёбер
     std::vector< size_t > m_disabledFaces, m_disabledHalfEdges;
     
     size_t addFace()
@@ -112,7 +111,7 @@ public:
         return m_halfEdges.size()-1;
     }
     
-    // Mark a face as disabled and return a pointer to the points that were on the positive of it.
+    // отмечает грань как удалённую
     std::unique_ptr< std::vector<size_t> > disableFace(size_t faceIndex)
     {
         auto& f = m_faces[faceIndex];
@@ -130,10 +129,11 @@ public:
     
     PHMesh() = default;
     
-    // Create a mesh with initial tetrahedron ABCD. Dot product of AB with the normal of triangle ABC should be negative.
+    // создат модель из начального театраэдра ABCD
+    // скалярное произведение AB и нормали к треугольнику ABC должно быть отрицательным
     PHMesh(size_t a, size_t b, size_t c, size_t d)
     {
-        // Create halfedges
+        // создаём полурёбра
         PHHalfEdge AB;
         AB.m_endVertex = b;
         AB.m_opp = 6;
@@ -218,7 +218,7 @@ public:
         DC.m_next = 9;
         m_halfEdges.push_back(DC);
         
-        // Create faces
+        // создаём грани
         PHFace ABC;
         ABC.m_he = 0;
         m_faces.push_back(std::move(ABC));

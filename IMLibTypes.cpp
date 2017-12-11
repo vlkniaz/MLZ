@@ -1,8 +1,8 @@
 //
 //  IMLibTypes.cpp
-//  Билиотека IM
+//  Р‘РёР»РёРѕС‚РµРєР° IMLib
 //
-//  определения базовых типов бибилиотеки IMLib
+//  РѕРїСЂРµРґРµР»РµРЅРёСЏ Р±Р°Р·РѕРІС‹С… С‚РёРїРѕРІ Р±РёР±РёР»РёРѕС‚РµРєРё IMLib
 //
 //  Created by Vladimir Knyaz on 29.05.14.
 //  Copyright (c) 2014 Vladimir Knyaz. All rights reserved.

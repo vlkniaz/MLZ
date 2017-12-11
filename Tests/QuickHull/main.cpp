@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     }
     
     PHQuickHull quickHull(vertices);
-    PHConvexHull hull = quickHull.getConvexHull(vertices, true, false);
+    PHConvexHull hull = quickHull.createConvexHull(vertices, true, false);
     hull.writeWaveformOBJ("hull.obj");
     
     cout << "Hello, world!" << endl;

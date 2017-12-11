@@ -1,5 +1,12 @@
-// PHQuickHull.h
-// класс, реализующий построение выпуклой оболочки
+//
+//  PHQuickHull.h
+//  Библиотека PHLib
+//
+//  класс PHQuickHull.h для построения выпуклой оболочки
+//
+//  Created by Vladimir Knyaz on 01.12.17.
+//  Copyright (c) 2017 Vladimir Knyaz. All rights reserved.
+//
 
 #pragma once
 
@@ -17,6 +24,7 @@
 
 using namespace std;
 
+// класс PHPool: быстрый доступ к индексам
 class PHPool
 {
     std::vector<std::unique_ptr< std::vector<size_t> >> m_data;
@@ -164,5 +172,6 @@ public:
     // создаёт выпуклую облочку
     void createConvexHalfEdgeMesh();
     
-    PHConvexHull getConvexHull(const std::vector<MAVector3>& pointCloud, bool CCW, bool useOriginalIndices, double epsilon = 0.0000001);
+    // возвращает построенную выпуклую оболочку
+    PHConvexHull createConvexHull(const std::vector<MAVector3>& pointCloud, bool CCW, bool useOriginalIndices, double epsilon = 0.0000001);
 };

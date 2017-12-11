@@ -103,11 +103,11 @@ PHMesh PHQuickHull::createInitialTetrahedron()
     }
     if (maxD == m_epsilonSquared)
     {
-        // A degenerate case: the point cloud seems to consists of a single point
+        // вырожденный случай: координаты всех точек совпадают
         result =  PHMesh(0,std::min((size_t)1,vertexCount-1),std::min((size_t)2,vertexCount-1),std::min((size_t)3,vertexCount-1));
     }
     
-    // Find the most distant point to the line between the two chosen extreme points.
+    // находим самую дальнюю точку, относительно выбранных двух точек
     const MARay r(m_vertices[selectedPoints.first], (m_vertices[selectedPoints.second] - m_vertices[selectedPoints.first]));
     maxD = m_epsilonSquared;
     size_t maxI=std::numeric_limits<size_t>::max();
@@ -123,8 +123,7 @@ PHMesh PHQuickHull::createInitialTetrahedron()
     }
     if (maxD == m_epsilonSquared)
     {
-        // It appears that the point cloud belongs to a 1 dimensional subspace of R^3: convex hull has no volume => return a thin triangle
-        // Pick any point other than selectedPoints.first and selectedPoints.second as the third point of the triangle
+        // случай, когда всё облако точек лежит в одной плоскости
         auto it = std::find_if(m_vertices.begin(),m_vertices.end(),[&](const MAVector3& ve)
         {
             return ve != m_vertices[selectedPoints.first] && ve != m_vertices[selectedPoints.second];
@@ -137,24 +136,28 @@ PHMesh PHQuickHull::createInitialTetrahedron()
         result = PHMesh(selectedPoints.first,selectedPoints.second,thirdPoint,fourthPoint);
     }
     
-    // These three points form the base triangle for our tetrahedron.
-    std::array<size_t,3> baseTriangle{selectedPoints.first, selectedPoints.second, maxI};
+    // формируем опорный треугольник из выбранных трёх точек
+    std::array<size_t,3> baseTriangle{{selectedPoints.first, selectedPoints.second, maxI}};
     const MAVector3 baseTriangleVertices[]={ m_vertices[baseTriangle[0]], m_vertices[baseTriangle[1]],  m_vertices[baseTriangle[2]] };
     
-    // Next step is to find the 4th vertex of the tetrahedron. We naturally choose the point farthest away from the triangle plane.
+    // находим самую дальнуюю точку, чтобы построить четвёртую вершину тетраэдра
     maxD=m_epsilon;
     maxI=0;
     const MAVector3 N = MAVector3::triangleNormal(baseTriangleVertices[0],baseTriangleVertices[1],baseTriangleVertices[2]);
     MAPlane trianglePlane(N,baseTriangleVertices[0]);
-    for (size_t i=0;i<vCount;i++) {
+    for (size_t i=0;i<vCount;i++)
+    {
         const double d = std::abs(MAPlane::signedDistanceToPlane(m_vertices[i], trianglePlane));
-        if (d>maxD) {
+        if (d>maxD)
+        {
             maxD=d;
             maxI=i;
         }
     }
-    if (maxD == m_epsilon) {
-        // All the points seem to lie on a 2D subspace of R^3. How to handle this? Well, let's add one extra point to the point cloud so that the convex hull will have volume.
+    if (maxD == m_epsilon)
+    {
+        // все точки лежат в одной плоскости
+        // добавляем ещё одну точку в облако точек, чтобы у выпуклой оболчки был ненулевой объём
         m_planar = true;
         const MAVector3 N = MAVector3::triangleNormal(baseTriangleVertices[1],baseTriangleVertices[2],baseTriangleVertices[0]);
         m_planarPointCloudTemp.clear();
@@ -162,18 +165,19 @@ PHMesh PHQuickHull::createInitialTetrahedron()
         const MAVector3 extraPoint = N + m_vertices[0];
         m_planarPointCloudTemp.push_back(extraPoint);
         maxI = m_planarPointCloudTemp.size()-1;
-        // TODO m_vertexData = VertexDataSource<T>(m_planarPointCloudTemp);
     }
     
-    // Enforce CCW orientation (if user prefers clockwise orientation, swap two vertices in each triangle when final mesh is created)
+    // проверяем, что получили ориентацию CCW
     const MAPlane triPlane(N,baseTriangleVertices[0]);
-    if (triPlane.isPointOnPositiveSide(m_vertices[maxI])) {
+    if (triPlane.isPointOnPositiveSide(m_vertices[maxI]))
+    {
         std::swap(baseTriangle[0],baseTriangle[1]);
     }
     
-    // Create a tetrahedron half edge mesh and compute planes defined by each triangle
+    // создаём сеточную модель тетраэдра из выбранных треугольников
     PHMesh mesh(baseTriangle[0],baseTriangle[1],baseTriangle[2],maxI);
-    for (auto& f : mesh.m_faces) {
+    for (auto& f : mesh.m_faces)
+    {
         auto v = mesh.getVertexIndicesOfFace(f);
         const MAVector3& va = m_vertices[v[0]];
         const MAVector3& vb = m_vertices[v[1]];
@@ -183,10 +187,14 @@ PHMesh PHQuickHull::createInitialTetrahedron()
         f.m_P = trianglePlane;
     }
     
-    // Finally we assign a face for each vertex outside the tetrahedron (vertices inside the tetrahedron have no role anymore)
-    for (size_t i=0;i<vCount;i++) {
-        for (auto& face : mesh.m_faces) {
-            if (addPointToFace(face, i)) {
+    // присваиваем вершины к каждой грани тетраэдра
+    // вершины, лежащие внутри тетраэдра нас больше не интересуют
+    for (size_t i=0;i<vCount;i++)
+    {
+        for (auto& face : mesh.m_faces)
+        {
+            if (addPointToFace(face, i))
+            {
                 break;
             }
         }
@@ -254,11 +262,13 @@ void PHQuickHull::createConvexHalfEdgeMesh()
             continue;
         }
         
-        // Pick the most distant point to this triangle plane as the point to which we extrude
+        //  выбираем самую дальную точку для текущего треугольника
         const MAVector3& activePoint = m_vertices[tf.m_mostDistantPoint];
         const size_t activePointIndex = tf.m_mostDistantPoint;
         
-        // Find out the faces that have our active point on their positive side (these are the "visible faces"). The face on top of the stack of course is one of them. At the same time, we create a list of horizon edges.
+        // находим грани, которые видны из текущей активной точки
+        // первый кандидат: верхняя грань в стеке
+        // параллельно создаём список рёбер, лежащих на горизонте
         horizonEdges.clear();
         possiblyVisibleFaces.clear();
         visibleFaces.clear();
@@ -297,17 +307,18 @@ void PHQuickHull::createConvexHalfEdgeMesh()
                 }
             }
             
-            // The face is not visible. Therefore, the halfedge we came from is part of the horizon edge.
+            // грань не видна – следовательно полуребро, из которого мы пришли, лежит на горизонте
             pvf.m_isVisibleFaceOnCurrentIteration = 0;
             horizonEdges.push_back(faceData.m_enteredFromHalfEdge);
-            // Store which half edge is the horizon edge. The other half edges of the face will not be part of the final mesh so their data slots can by recycled.
+            // сохраняем полуребро, которое лежит на горизонте
             const auto halfEdges = m_mesh.getHalfEdgeIndicesOfFace(m_mesh.m_faces[m_mesh.m_halfEdges[faceData.m_enteredFromHalfEdge].m_face]);
             const std::int8_t ind = (halfEdges[0]==faceData.m_enteredFromHalfEdge) ? 0 : (halfEdges[1]==faceData.m_enteredFromHalfEdge ? 1 : 2);
             m_mesh.m_faces[m_mesh.m_halfEdges[faceData.m_enteredFromHalfEdge].m_face].m_horizonEdgesOnCurrentIteration |= (1<<ind);
         }
         const size_t horizonEdgeCount = horizonEdges.size();
         
-        // Order horizon edges so that they form a loop. This may fail due to numerical instability in which case we give up trying to solve horizon edge for this point and accept a minor degeneration in the convex hull.
+        // формируем замкнутый путь из рёбер, лежащих на горизонте
+        // операция может быть неудачной в силу погрешностей округления
         if (!reorderHorizonEdges(horizonEdges))
         {
             std::cerr << "Failed to solve horizon edge." << std::endl;
@@ -320,31 +331,36 @@ void PHQuickHull::createConvexHalfEdgeMesh()
             continue;
         }
         
-        // Except for the horizon edges, all half edges of the visible faces can be marked as disabled. Their data slots will be reused.
-        // The faces will be disabled as well, but we need to remember the points that were on the positive side of them - therefore
-        // we save pointers to them.
+        // все рёбра, кроме тех, что лежат на горизонте, могут быть удалены
+        // помечаем их отключёнными, чтобы использовать память для новых рёбер
+        // сохраняем указатели на вершины, видимые из данной точки
         m_newFaceIndices.clear();
         m_newHalfEdgeIndices.clear();
         m_disabledFacePointVectors.clear();
         size_t disableCounter = 0;
-        for (auto faceIndex : visibleFaces) {
+        for (auto faceIndex : visibleFaces)
+        {
             auto& disabledFace = m_mesh.m_faces[faceIndex];
             auto halfEdges = m_mesh.getHalfEdgeIndicesOfFace(disabledFace);
-            for (size_t j=0;j<3;j++) {
-                if ((disabledFace.m_horizonEdgesOnCurrentIteration & (1<<j)) == 0) {
-                    if (disableCounter < horizonEdgeCount*2) {
-                        // Use on this iteration
+            for (size_t j=0;j<3;j++)
+            {
+                if ((disabledFace.m_horizonEdgesOnCurrentIteration & (1<<j)) == 0)
+                {
+                    if (disableCounter < horizonEdgeCount*2)
+                    {
+                        // помечаем для использования на данной итерации
                         m_newHalfEdgeIndices.push_back(halfEdges[j]);
                         disableCounter++;
                     }
-                    else {
-                        // Mark for reusal on later iteration step
+                    else
+                    {
+                        // помечаем для использования на следующих итерациях
                         m_mesh.disableHalfEdge(halfEdges[j]);
                     }
                 }
             }
-            // Disable the face, but retain pointer to the points that were on the positive side of it. We need to assign those points
-            // to the new faces we create shortly.
+            // помечаем грань, как удалённую, но сохраняем указатели на точки, видимые из данной грани
+            // на сохранённых точках будут построены новые грани
             auto t = std::move(m_mesh.disableFace(faceIndex));
             if (t)
             {
@@ -358,7 +374,7 @@ void PHQuickHull::createConvexHalfEdgeMesh()
             }
         }
         
-        // Create new faces using the edgeloop
+        // создаём новые грани, используя рёбра, лежащие на горизонте
         for (size_t i = 0; i < horizonEdgeCount; i++)
         {
             const size_t AB = horizonEdges[i];
@@ -396,7 +412,7 @@ void PHQuickHull::createConvexHalfEdgeMesh()
             m_mesh.m_halfEdges[BC].m_opp = m_newHalfEdgeIndices[((i+1)*2) % (horizonEdgeCount*2)];
         }
         
-        // Assign points that were on the positive side of the disabled faces to the new faces.
+        // присваиваем точки, которые были видны из удалённых гранях, созданным только что граням
         for (auto& disabledPoints : m_disabledFacePointVectors)
         {
             for (const auto& point : *(disabledPoints))
@@ -413,11 +429,11 @@ void PHQuickHull::createConvexHalfEdgeMesh()
                     }
                 }
             }
-            // The points are no longer needed: we can move them to the vector pool for reuse.
+            // точки больше не будут использоваться: помещаем их в кэш для последующего использования
             reclaimToIndexVectorPool(disabledPoints);
         }
         
-        // Increase face stack size if needed
+        // если требуется, увеличиваем размер стека граней
         for (const auto newFaceIndex : m_newFaceIndices)
         {
             auto& newFace = m_mesh.m_faces[newFaceIndex];
@@ -435,7 +451,7 @@ void PHQuickHull::createConvexHalfEdgeMesh()
     m_indexVectorPool.clear();
 }
 
-PHConvexHull PHQuickHull::getConvexHull(const std::vector<MAVector3>& pointCloud, bool CCW, bool useOriginalIndices, double epsilon)
+PHConvexHull PHQuickHull::createConvexHull(const std::vector<MAVector3>& pointCloud, bool CCW, bool useOriginalIndices, double epsilon)
 {
     buildMesh(pointCloud,CCW,useOriginalIndices,epsilon);
     return PHConvexHull(m_mesh, m_vertices, CCW, useOriginalIndices);

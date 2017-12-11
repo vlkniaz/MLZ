@@ -258,7 +258,8 @@ void PHQuickHull::createConvexHalfEdgeMesh()
         auto& tf = m_mesh.m_faces[topFaceIndex];
         tf.m_inFaceStack = 0;
         
-        if (!tf.m_pointsOnPositiveSide || tf.isDisabled()) {
+        if (!tf.m_pointsOnPositiveSide || tf.isDisabled())
+        {
             continue;
         }
         
@@ -412,7 +413,7 @@ void PHQuickHull::createConvexHalfEdgeMesh()
             m_mesh.m_halfEdges[BC].m_opp = m_newHalfEdgeIndices[((i+1)*2) % (horizonEdgeCount*2)];
         }
         
-        // присваиваем точки, которые были видны из удалённых гранях, созданным только что граням
+        // присваиваем точки, которые были видны из удалённых граней, созданным только что граням
         for (auto& disabledPoints : m_disabledFacePointVectors)
         {
             for (const auto& point : *(disabledPoints))

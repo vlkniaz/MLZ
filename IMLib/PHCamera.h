@@ -23,13 +23,21 @@ public:
     
     // фоусное расстояние
     double m_f;
+    // номинальное фокусное расстояние
     double m_fnom;
+    // курс
     double m_alpha;
+    // тангаж	
     double m_omega;
+    // крен
     double m_kappa;
+    // масштаб снимка X
     double m_mx;
+    // масштаб снимка Y
     double m_my;
+    // параметры дисторсии
     double m_a;
+    // параметры дисторсии
     double m_K1;
     double m_K2;
     double m_K3;

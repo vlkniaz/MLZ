@@ -18,7 +18,9 @@ public:
 	double X0, Y0, Z0; // perspective centre
 	MAMatrix perspective_centre;
 	MAMatrix R; // rotation matrix
+    // центр проекции в системе коордиант сцены
     MAVector3 m_X0;
+    // центр снимка
     MAVector3 m_b;
     
     // фоусное расстояние
